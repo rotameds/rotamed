@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RotaMeds — Planilha de Revisão para Residência e Revalida</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --azul: #0A1E4A;
+  --azul2: #142d6e;
+  --red: #E01A2B;
+  --red2: #ff3347;
+  --gold: #F5A623;
+  --white: #FFFFFF;
+  --off: #F0F4FF;
+  --text: #1a1a2e;
+  --muted: #6b7a99;
+  --green: #00C853;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; scroll-behavior: smooth; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: #050d1f;
+  color: var(--white);
+  overflow-x: hidden;
+}
+
+/* ── STICKY URGENCY BAR ── */
+.urgency-bar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 999;
+  background: var(--red);
+  padding: 10px 16px;
+  text-align: center;
+  font-size: clamp(12px, 3vw, 14px);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.urgency-bar .timer-inline {
+  background: rgba(0,0,0,0.25);
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 1px;
+  font-family: 'Bebas Neue', sans-serif;
+}
+.urgency-bar .pulse {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  animation: pulse 1.2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(1.4)} }
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100px 20px 60px;
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(ellipse 120% 80% at 50% -10%, rgba(224,26,43,0.18) 0%, transparent 60%),
+              radial-gradient(ellipse 80% 60% at 80% 80%, rgba(10,30,74,0.8) 0%, transparent 60%),
+              linear-gradient(170deg, #050d1f 0%, #0a1228 50%, #0d0510 100%);
+}
+
+/* grid lines bg */
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+}
+
+.hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(224,26,43,0.15);
+  border: 1px solid rgba(224,26,43,0.5);
+  color: #ff7080;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 7px 18px;
+  border-radius: 30px;
+  margin-bottom: 28px;
+  animation: fadeUp 0.6s ease both;
+}
+.hero-tag .dot { width:6px;height:6px;border-radius:50%;background:var(--red);animation:pulse 1s infinite; }
+
+.hero h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(48px, 9vw, 100px);
+  line-height: 0.92;
+  text-align: center;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  animation: fadeUp 0.7s 0.1s ease both;
+}
+.hero h1 .line2 { color: var(--red); display: block; }
+.hero h1 .line3 { color: rgba(255,255,255,0.3); font-size: 0.45em; display: block; letter-spacing: 4px; margin-top: 6px; font-family: 'Outfit', sans-serif; font-weight: 300; }
+
+.hero-sub {
+  font-size: clamp(16px, 4vw, 19px);
+  color: rgba(255,255,255,0.6);
+  max-width: 560px;
+  text-align: center;
+  line-height: 1.7;
+  margin: 24px auto 36px;
+  animation: fadeUp 0.7s 0.2s ease both;
+}
+.hero-sub strong { color: #fff; font-weight: 700; }
+
+/* Price block */
+.price-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 32px;
+  animation: fadeUp 0.7s 0.3s ease both;
+}
+.price-old {
+  font-size: 16px;
+  color: var(--muted);
+  text-decoration: line-through;
+}
+.price-new {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(52px, 8vw, 80px);
+  color: var(--white);
+  line-height: 1;
+}
+.price-new sup { font-size: 0.4em; vertical-align: top; margin-top: 12px; color: rgba(255,255,255,0.7); font-family: 'Outfit', sans-serif; }
+.price-new span { color: var(--red); }
+.price-badge {
+  background: var(--gold);
+  color: #000;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 14px;
+  border-radius: 20px;
+  letter-spacing: 1px;
+}
+
+.cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--red);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 800;
+  padding: 18px 44px;
+  border-radius: 50px;
+  text-decoration: none;
+  letter-spacing: 0.3px;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 0 40px rgba(224,26,43,0.4);
+  animation: fadeUp 0.7s 0.4s ease both;
+  position: relative;
+  overflow: hidden;
+}
+.cta-btn::after {
+  content:'';
+  position:absolute;inset:0;
+  background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,0.15) 50%,transparent 70%);
+  transform:translateX(-100%);
+  transition:transform 0.5s;
+}
+.cta-btn:hover { transform: translateY(-2px); box-shadow: 0 0 60px rgba(224,26,43,0.6); }
+.cta-btn:hover::after { transform:translateX(100%); }
+.cta-btn .arrow { font-size: 20px; }
+
+.hero-guarantee {
+  margin-top: 16px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.35);
+  animation: fadeUp 0.7s 0.5s ease both;
+}
+
+/* Scarcity counter */
+.scarcity {
+  margin-top: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: clamp(13px, 3vw, 15px);
+  color: rgba(255,255,255,0.55);
+  animation: fadeUp 0.7s 0.55s ease both;
+}
+.scarcity-bar-wrap {
+  width: 160px;
+  height: 6px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.scarcity-bar {
+  height: 100%;
+  width: 74%;
+  background: linear-gradient(90deg, var(--red), var(--gold));
+  border-radius: 10px;
+}
+.scarcity strong { color: var(--red); }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── SOCIAL PROOF ── */
+.proof-strip {
+  background: rgba(255,255,255,0.03);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+}
+.proof-item { display: flex; align-items: center; gap: 8px; font-size: clamp(12px, 3vw, 14px); }
+.proof-num { font-family: 'Bebas Neue', sans-serif; font-size: clamp(22px, 5vw, 26px); color: #fff; }
+
+/* ── SECTIONS ── */
+.section {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: clamp(48px, 8vw, 80px) clamp(16px, 5vw, 40px);
+}
+.section-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 12px;
+}
+.section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(38px, 8vw, 62px);
+  line-height: 1.05;
+  margin-bottom: 18px;
+}
+.section-title em { color: var(--red); font-style: normal; }
+.section-desc {
+  font-size: clamp(15px, 3.5vw, 18px);
+  color: rgba(255,255,255,0.6);
+  max-width: 600px;
+  line-height: 1.75;
+  margin-bottom: 48px;
+}
+hr.divider {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent);
+  margin: 0;
+}
+
+/* ── PROBLEM ── */
+.problem-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+.problem-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  padding: 26px 24px;
+  position: relative;
+}
+.problem-icon { font-size: clamp(30px, 6vw, 36px); margin-bottom: 14px; }
+.problem-title { font-size: clamp(15px, 3.5vw, 18px); font-weight: 700; color: #fff; margin-bottom: 8px; }
+.problem-desc { font-size: clamp(13px, 3vw, 15px); color: rgba(255,255,255,0.55); line-height: 1.7; }
+
+/* ── FEATURES ── */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+.feature-card {
+  background: rgba(10,30,74,0.4);
+  border: 1px solid rgba(214,228,247,0.1);
+  border-radius: 16px;
+  padding: 26px;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.feature-card:hover { border-color: rgba(224,26,43,0.3); transform: translateY(-3px); }
+.feature-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  color: rgba(224,26,43,0.25);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.feature-title { font-size: clamp(16px, 3.5vw, 18px); font-weight: 700; color: #fff; margin-bottom: 10px; }
+.feature-desc { font-size: clamp(13px, 3vw, 15px); color: rgba(255,255,255,0.55); line-height: 1.7; }
+.feature-tag {
+  display: inline-block;
+  background: rgba(224,26,43,0.12);
+  border: 1px solid rgba(224,26,43,0.25);
+  color: #ff7080;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-top: 10px;
+  letter-spacing: 1px;
+}
+
+/* ── HOW IT WORKS ── */
+.steps { display: flex; flex-direction: column; gap: 0; position: relative; }
+.steps::before {
+  content:'';
+  position:absolute;
+  left: 27px; top:28px; bottom:28px;
+  width:2px;
+  background:linear-gradient(180deg, var(--red), rgba(224,26,43,0.1));
+}
+.step {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  padding: 20px 0;
+}
+.step-num {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--red);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  flex-shrink: 0;
+  position: relative; z-index: 1;
+  box-shadow: 0 0 20px rgba(224,26,43,0.4);
+}
+.step-content { padding-top: 12px; }
+.step-title { font-size: clamp(16px, 3.5vw, 19px); font-weight: 700; color: #fff; margin-bottom: 8px; }
+.step-desc { font-size: clamp(14px, 3vw, 16px); color: rgba(255,255,255,0.55); line-height: 1.7; }
+
+/* ── TESTIMONIALS ── */
+.testi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+.testi-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 24px;
+}
+.testi-stars { color: var(--gold); font-size: 14px; margin-bottom: 12px; letter-spacing: 2px; }
+.testi-text { font-size: clamp(14px, 3vw, 16px); color: rgba(255,255,255,0.75); line-height: 1.75; margin-bottom: 16px; font-style: italic; }
+.testi-author { display: flex; align-items: center; gap: 10px; }
+.testi-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 13px;
+  flex-shrink: 0;
+}
+.testi-name { font-size: 14px; font-weight: 700; color: #fff; }
+.testi-role { font-size: 12px; color: var(--muted); }
+
+/* ── FAQ ── */
+.faq-list { display: flex; flex-direction: column; gap: 12px; }
+.faq-item {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.faq-q {
+  width: 100%;
+  padding: 18px 20px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: clamp(14px, 3.5vw, 16px);
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.faq-q:hover { color: #ff7080; }
+.faq-q .chevron { font-size: 18px; transition: transform 0.3s; flex-shrink:0; }
+.faq-q.open .chevron { transform: rotate(180deg); }
+.faq-a {
+  display: none;
+  padding: 0 20px 18px;
+  font-size: clamp(13px, 3vw, 15px);
+  color: rgba(255,255,255,0.6);
+  line-height: 1.75;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 16px;
+}
+.faq-a.open { display: block; }
+
+/* ── COUNTDOWN ── */
+.countdown-section {
+  background: linear-gradient(135deg, rgba(224,26,43,0.12) 0%, rgba(10,30,74,0.4) 100%);
+  border: 1px solid rgba(224,26,43,0.2);
+  border-radius: 24px;
+  padding: 48px 32px;
+  text-align: center;
+  margin: 0 24px;
+}
+.countdown-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(28px, 4vw, 44px);
+  margin-bottom: 8px;
+}
+.countdown-sub { font-size: 14px; color: rgba(255,255,255,0.5); margin-bottom: 32px; }
+.countdown-timer {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 36px;
+  flex-wrap: wrap;
+}
+.timer-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.timer-val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(48px, 8vw, 72px);
+  color: #fff;
+  line-height: 1;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 8px 20px;
+  min-width: 80px;
+  text-align: center;
+}
+.timer-label { font-size: 10px; color: rgba(255,255,255,0.4); letter-spacing: 2px; text-transform: uppercase; }
+.timer-sep {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 52px;
+  color: rgba(224,26,43,0.5);
+  line-height: 1;
+  padding-top: 8px;
+}
+
+/* ── FINAL CTA ── */
+.final-cta {
+  background: linear-gradient(170deg, #0A1E4A, #050d1f);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 80px 24px;
+  text-align: center;
+}
+.final-cta .brand {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 48px;
+  margin-bottom: 4px;
+}
+.final-cta .brand span { color: var(--red); }
+.guarantee-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(0,200,83,0.08);
+  border: 1px solid rgba(0,200,83,0.2);
+  border-radius: 12px;
+  padding: 14px 20px;
+  margin: 24px auto;
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+  max-width: 440px;
+}
+.guarantee-icon { font-size: 28px; flex-shrink: 0; }
+
+/* ── CHECKLIST ── */
+.check-list { display: flex; flex-direction: column; gap: 10px; text-align: left; max-width: 440px; margin: 0 auto 32px; }
+.check-item { display: flex; gap: 12px; align-items: flex-start; font-size: clamp(14px, 3.5vw, 16px); color: rgba(255,255,255,0.8); }
+.check-item::before { content:'✓'; color: var(--green); font-weight: 800; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+/* ── FLOATING CTA ── */
+.float-cta {
+  position: fixed;
+  bottom: 24px; right: 24px; z-index: 900;
+  background: var(--red);
+  color: #fff;
+  font-size: clamp(14px, 3.5vw, 15px);
+  font-weight: 800;
+  padding: 15px 26px;
+  border-radius: 50px;
+  text-decoration: none;
+  box-shadow: 0 8px 32px rgba(224,26,43,0.5);
+  transition: transform 0.15s;
+  display: flex; align-items: center; gap: 8px;
+  animation: floatIn 1s 1.5s both;
+}
+.float-cta:hover { transform: scale(1.05); }
+@keyframes floatIn { from{opacity:0;transform:translateY(40px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── FOOTER ── */
+footer {
+  background: #020810;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding: 28px 24px;
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255,255,255,0.25);
+}
+
+
+/* ══════════════════════════════════════
+   RESPONSIVE — MOBILE FIRST
+══════════════════════════════════════ */
+
+/* ── BASE: tudo fluido ── */
+img, video { max-width: 100%; height: auto; }
+
+.section {
+  padding: 60px 20px;
+}
+
+/* ── URGENCY BAR ── */
+.urgency-bar {
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  font-size: 12px;
+  gap: 6px;
+  justify-content: center;
+  text-align: center;
+}
+
+/* ── HERO ── */
+.hero {
+  padding: 90px 20px 50px;
+}
+.hero h1 {
+  font-size: clamp(44px, 13vw, 100px);
+}
+.hero-sub {
+  font-size: clamp(14px, 3.5vw, 18px);
+  padding: 0 4px;
+}
+.price-new {
+  font-size: clamp(50px, 13vw, 80px);
+}
+.cta-btn {
+  font-size: clamp(14px, 3.5vw, 17px);
+  padding: 16px 32px;
+  width: 100%;
+  max-width: 400px;
+  justify-content: center;
+  text-align: center;
+}
+.scarcity {
+  flex-wrap: wrap;
+  justify-content: center;
+  text-align: center;
+  gap: 8px;
+}
+
+/* ── PROOF STRIP ── */
+.proof-strip {
+  gap: 16px;
+  padding: 20px 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.proof-item {
+  font-size: 12px;
+}
+
+/* ── GRIDS ── */
+.problem-grid {
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+.features-grid {
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+.testi-grid {
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+/* ── STEPS / HOW IT WORKS ── */
+.step {
+  gap: 16px;
+  padding: 16px 0;
+}
+.step-num {
+  width: 46px; height: 46px;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.step-title { font-size: 15px; }
+.step-desc { font-size: 13px; }
+.steps::before { left: 22px; }
+
+/* ── COUNTDOWN ── */
+.countdown-section {
+  padding: 36px 16px;
+  margin: 0 12px;
+  border-radius: 18px;
+}
+.countdown-timer {
+  gap: 8px;
+}
+.timer-val {
+  font-size: clamp(38px, 11vw, 72px);
+  padding: 6px 12px;
+  min-width: 60px;
+  border-radius: 8px;
+}
+.timer-sep {
+  font-size: clamp(36px, 9vw, 52px);
+  padding-top: 6px;
+}
+.countdown-title {
+  font-size: clamp(26px, 6vw, 44px);
+}
+
+/* ── FAQ ── */
+.faq-q {
+  font-size: 14px;
+  padding: 16px 16px;
+}
+.faq-a {
+  font-size: 13px;
+  padding: 14px 16px;
+}
+
+/* ── FINAL CTA ── */
+.final-cta {
+  padding: 60px 20px;
+}
+.final-cta .brand {
+  font-size: clamp(36px, 10vw, 48px);
+}
+.guarantee-box {
+  flex-direction: column;
+  text-align: center;
+  padding: 16px;
+  gap: 8px;
+}
+.check-list {
+  padding: 0 8px;
+}
+.check-item {
+  font-size: 13px;
+}
+
+/* ── FLOATING CTA ── */
+.float-cta {
+  bottom: 16px;
+  right: 12px;
+  left: 12px;
+  border-radius: 14px;
+  justify-content: center;
+  font-size: 15px;
+  padding: 15px 20px;
+}
+
+/* ── SECTION TITLES ── */
+.section-title {
+  font-size: clamp(28px, 6vw, 54px);
+}
+.section-desc {
+  font-size: clamp(14px, 3vw, 16px);
+}
+
+/* ══ TABLET: 601px–900px ══ */
+@media (min-width: 601px) {
+  .problem-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .testi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .cta-btn {
+    width: auto;
+  }
+  .float-cta {
+    left: auto;
+    right: 24px;
+    border-radius: 50px;
+    font-size: 14px;
+    padding: 14px 24px;
+  }
+  .hero {
+    padding: 100px 32px 60px;
+  }
+  .section {
+    padding: 70px 32px;
+  }
+}
+
+/* ══ DESKTOP: 901px+ ══ */
+@media (min-width: 901px) {
+  .problem-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .features-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .testi-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .hero {
+    padding: 120px 40px 80px;
+  }
+  .section {
+    padding: 80px 24px;
+  }
+  .cta-btn {
+    font-size: 17px;
+    padding: 18px 44px;
+    width: auto;
+  }
+}
+
+</style>
+</head>
+<body>
+
+<!-- URGENCY BAR -->
+<div class="urgency-bar">
+  <span class="pulse"></span>
+  🔥 Oferta de lançamento termina em:
+  <span class="timer-inline" id="bar-timer">00:00:00</span>
+  — Depois volta para R$37
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-tag">
+    <span class="dot"></span>
+    Exclusivo para quem estuda para provas
+  </div>
+
+  <h1>
+    PARE DE<br>
+    <span class="line2">ESQUECER</span>
+    <span class="line3">o que você estudou</span>
+  </h1>
+
+  <p class="hero-sub">
+    A <strong>Planilha de Revisão RotaMeds</strong> programa automaticamente suas revisões com base na ciência do esquecimento — para você fixar o conteúdo de vez e ir aprovado na prova.
+  </p>
+
+  <div class="price-block">
+    <span class="price-old">De R$ 37,00</span>
+    <div class="price-new"><sup>R$</sup> <span>14</span>,90</div>
+    <span class="price-badge">⚡ 60% OFF — LANÇAMENTO</span>
+  </div>
+
+  <a href="https://pay.hotmart.com/Y105321768N" class="cta-btn">
+    QUERO MINHA PLANILHA AGORA
+    <span class="arrow">→</span>
+  </a>
+
+  <p class="hero-guarantee">🔒 Compra segura via Hotmart &nbsp;·&nbsp; Acesso imediato</p>
+
+  <div class="scarcity">
+    <span>Restam</span>
+    <div class="scarcity-bar-wrap"><div class="scarcity-bar"></div></div>
+    <span><strong>apenas 37 planilhas</strong> neste preço</span>
+  </div>
+</section>
+
+<!-- PROOF STRIP -->
+<div class="proof-strip">
+  <div class="proof-item"><span class="proof-num">4</span> revisões automáticas por tema</div>
+  <div class="proof-item">Abas que se comunicam entre si</div>
+  <div class="proof-item"><span class="proof-num">100%</span> automático</div>
+  <div class="proof-item"><span class="proof-num">R$14,90</span> por acesso vitalício</div>
+</div>
+
+<!-- PROBLEMA -->
+<section style="background: linear-gradient(180deg, #050d1f, #080f22);">
+  <div class="section">
+    <div class="section-label">O problema real</div>
+    <h2 class="section-title">Você estuda muito.<br><em>Mas revisa pouco.</em></h2>
+    <p class="section-desc">E não é culpa sua. O cérebro humano é programado para esquecer — a não ser que você revise nos momentos exatos.</p>
+
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="problem-icon">😩</div>
+        <div class="problem-title">Estudou hoje, esqueceu amanhã</div>
+        <div class="problem-desc">Após 24h você perde até 70% do que aprendeu. Sem revisão programada, o esforço vai pelo ralo.</div>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">📋</div>
+        <div class="problem-title">Caderno ou app que não funciona</div>
+        <div class="problem-desc">Planilhas genéricas, Notion improvisado, Anki sem organização. Nenhum pensado para a realidade da residência.</div>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">⏰</div>
+        <div class="problem-title">Não sabe o que revisar hoje</div>
+        <div class="problem-desc">Sem um sistema, você revisa o que está fresco na memória — e ignora exatamente o que mais precisa de reforço.</div>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">😰</div>
+        <div class="problem-title">A prova chegando e o conteúdo some</div>
+        <div class="problem-desc">Meses de estudo sem revisão estruturada resultam em pânico na reta final e performance abaixo do potencial.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- SOLUÇÃO / FEATURES -->
+<section style="background: #080f22;">
+  <div class="section">
+    <div class="section-label">A solução</div>
+    <h2 class="section-title">Uma planilha que pensa<br><em>por você.</em></h2>
+    <p class="section-desc">Você só estuda. Ela organiza, agenda e controla suas revisões — baseada na curva de esquecimento de Ebbinghaus.</p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-num">01</div>
+        <div class="feature-title">Revisões automáticas em 4 etapas</div>
+        <div class="feature-desc">Estude um tema hoje. A planilha já agenda revisões em dias estratégicos — sem você precisar pensar.</div>
+        <span class="feature-tag">AUTOMÁTICO</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-num">02</div>
+        <div class="feature-title">Aba "HOJE" — seu guia diário</div>
+        <div class="feature-desc">Todo dia você abre e já sabe exatamente o que estudar e o que revisar. Zero dúvida, zero perda de tempo.</div>
+        <span class="feature-tag">PRODUTIVIDADE</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-num">03</div>
+        <div class="feature-title">Calendário visual de estudos</div>
+        <div class="feature-desc">Visualize seu mês completo com os temas distribuídos por dia. Planejamento estratégico na palma da mão.</div>
+        <span class="feature-tag">ORGANIZAÇÃO</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-num">04</div>
+        <div class="feature-title">Contador regressivo para a prova</div>
+        <div class="feature-desc">Quantos dias faltam? A planilha calcula em tempo real e mantém seu senso de urgência sempre ativo.</div>
+        <span class="feature-tag">FOCO</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-num">05</div>
+        <div class="feature-title">Cronograma completo integrado</div>
+        <div class="feature-desc">Abas que se comunicam entre si. Você registra uma vez na aba TEMA e tudo mais é atualizado automaticamente.</div>
+        <span class="feature-tag">INTEGRADO</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-num">06</div>
+        <div class="feature-title">Campos editáveis em vermelho</div>
+        <div class="feature-desc">Você sabe exatamente onde preencher — os campos editáveis têm borda vermelha. Impossível errar.</div>
+        <span class="feature-tag">FÁCIL DE USAR</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- HOW IT WORKS -->
+<section style="background: linear-gradient(180deg, #080f22, #050d1f);">
+  <div class="section">
+    <div class="section-label">Como funciona</div>
+    <h2 class="section-title">Em <em>3 passos</em> simples.</h2>
+    <p class="section-desc">Sem curva de aprendizado. Se você sabe digitar em uma célula, você usa essa planilha.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Preencha a aba TEMA com o que você estudou</div>
+          <div class="step-desc">Registre a data e os temas estudados nas células com borda vermelha. Simples assim — como um diário de estudos.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">A planilha agenda suas revisões automaticamente</div>
+          <div class="step-desc">Ela calcula os dias estratégicos e distribui as revisões no calendário — sem você precisar fazer nada.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Todo dia, abra a aba HOJE e execute</div>
+          <div class="step-desc">Você vê tudo que precisa fazer naquele dia: temas novos + revisões. Estuda, dá check e fecha. Pronto.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- TESTIMONIALS -->
+<section style="background: #050d1f;">
+  <div class="section">
+    <div class="section-label">O que dizem</div>
+    <h2 class="section-title">Quem usa, <em>não larga.</em></h2>
+
+    <div class="testi-grid">
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"Passei meses tentando montar meu próprio sistema de revisão. Em 10 minutos com essa planilha já estava tudo funcionando. É absurdamente prática."</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:rgba(10,30,74,0.8);color:#8baad8;">AM</div>
+          <div>
+            <div class="testi-name">Ana M.</div>
+            <div class="testi-role">Candidata à Residência — SP</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"Finalmente um sistema que avisa o que eu preciso revisar hoje. Não preciso mais tentar lembrar o que estudei na semana passada."</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:rgba(224,26,43,0.2);color:#ff7080;">RS</div>
+          <div>
+            <div class="testi-name">Rafael S.</div>
+            <div class="testi-role">Revalida — MG</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"R$14,90 é ridiculamente barato pelo que entrega. Vale mais que muitos cursos que já fiz. O método de repetição espaçada fez diferença real nos meus simulados."</p>
+        <div class="testi-author">
+          <div class="testi-avatar" style="background:rgba(245,166,35,0.2);color:#F5A623;">CF</div>
+          <div>
+            <div class="testi-name">Carolina F.</div>
+            <div class="testi-role">R1 Aprovada — RJ</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- COUNTDOWN -->
+<section style="background: #050d1f; padding: 60px 0;">
+  <div class="countdown-section" style="max-width:800px; margin:0 auto;">
+    <div class="section-label" style="text-align:center;">⚡ Oferta expira em</div>
+    <h2 class="countdown-title">Preço de lançamento <em style="color:var(--red)">acaba logo</em></h2>
+    <p class="countdown-sub">Depois disso o valor volta para R$37. Não perca.</p>
+
+    <div class="countdown-timer">
+      <div class="timer-unit">
+        <div class="timer-val" id="cd-h">00</div>
+        <div class="timer-label">Horas</div>
+      </div>
+      <div class="timer-sep">:</div>
+      <div class="timer-unit">
+        <div class="timer-val" id="cd-m">00</div>
+        <div class="timer-label">Minutos</div>
+      </div>
+      <div class="timer-sep">:</div>
+      <div class="timer-unit">
+        <div class="timer-val" id="cd-s">00</div>
+        <div class="timer-label">Segundos</div>
+      </div>
+    </div>
+
+    <a href="https://pay.hotmart.com/Y105321768N" class="cta-btn" style="font-size:18px; padding:20px 52px;">
+      GARANTIR POR R$14,90 AGORA →
+    </a>
+    <p style="margin-top:14px; font-size:12px; color:rgba(255,255,255,0.3);">Acesso imediato após pagamento · Funciona no Excel e Google Sheets</p>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- FAQ -->
+<section style="background: #080f22;">
+  <div class="section">
+    <div class="section-label">Dúvidas</div>
+    <h2 class="section-title">Perguntas <em>frequentes.</em></h2>
+
+    <div class="faq-list">
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Preciso saber usar Excel para usar essa planilha?
+          <span class="chevron">▾</span>
+        </button>
+        <div class="faq-a">Não. Os únicos campos que você preenche são destacados com borda vermelha — qualquer pessoa que saiba digitar consegue usar. Todo o resto é automático.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Funciona no Google Sheets ou só no Excel?
+          <span class="chevron">▾</span>
+        </button>
+        <div class="faq-a">Funciona nos dois. O arquivo é .xlsx e pode ser aberto tanto no Excel (Windows e Mac) quanto no Google Sheets diretamente pelo navegador, sem custo adicional.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          O que é repetição espaçada e por que funciona?
+          <span class="chevron">▾</span>
+        </button>
+        <div class="faq-a">É uma técnica baseada na curva de esquecimento de Hermann Ebbinghaus (1885): nosso cérebro retém melhor quando revisitamos o conteúdo em intervalos estratégicos crescentes após o estudo inicial. A planilha calcula esses dias por você automaticamente.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Como recebo a planilha após o pagamento?
+          <span class="chevron">▾</span>
+        </button>
+        <div class="faq-a">O acesso é imediato via Hotmart. Assim que o pagamento for confirmado, você recebe o link por e-mail para baixar o arquivo. Funciona 24h por dia.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Esse preço de R$14,90 é permanente?
+          <span class="chevron">▾</span>
+        </button>
+        <div class="faq-a">Não. É o preço de lançamento com 60% de desconto. Quando o período de lançamento encerrar, o valor volta para R$37. Quem comprar agora garante o menor preço para sempre.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          Tem garantia?
+          <span class="chevron">▾</span>
+        </button>
+        <div class="faq-a">Sim. A Hotmart oferece garantia de 7 dias. Se por qualquer motivo você não ficar satisfeito, basta solicitar o reembolso dentro desse prazo e receberá seu dinheiro de volta.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- FINAL CTA -->
+<section class="final-cta">
+  <div class="final-cta">
+    <div class="brand">rota<span>MEDS</span></div>
+    <p style="color:rgba(255,255,255,0.45); font-size:14px; margin-bottom:32px;">Planilha de Revisão para Residência Médica & Revalida</p>
+
+    <div class="check-list">
+      <div class="check-item">Repetição espaçada automática em 4 etapas</div>
+      <div class="check-item">Aba "HOJE" com tudo que você precisa fazer no dia</div>
+      <div class="check-item">Calendário mensal de estudos e revisões</div>
+      <div class="check-item">Contador regressivo para a data da prova</div>
+      <div class="check-item">Abas que se comunicam entre si — totalmente automáticas</div>
+      <div class="check-item">Funciona no Excel e Google Sheets</div>
+      <div class="check-item">Acesso vitalício com atualizações inclusas</div>
+    </div>
+
+    <div class="guarantee-box">
+      <span class="guarantee-icon">🛡️</span>
+      <span><strong style="color:#fff;">Garantia de 7 dias</strong> — Se não gostar, devolvemos 100% do valor. Sem burocracia.</span>
+    </div>
+
+    <div style="margin-bottom:28px;">
+      <div style="font-size:14px; color:var(--muted); text-decoration:line-through; margin-bottom:4px;">De R$ 37,00</div>
+      <div style="font-family:'Bebas Neue',sans-serif; font-size:64px; line-height:1; color:#fff; margin-bottom:4px;">R$ <span style="color:var(--red);">14</span>,90</div>
+      <div style="font-size:12px; color:var(--muted);">Pagamento único · Acesso imediato</div>
+    </div>
+
+    <a href="https://pay.hotmart.com/Y105321768N" class="cta-btn" style="font-size:19px; padding:22px 56px;">
+      QUERO MINHA PLANILHA AGORA →
+    </a>
+
+    <p style="margin-top:20px; font-size:11px; color:rgba(255,255,255,0.2);">
+      Compra 100% segura via Hotmart · Pagamento por cartão, boleto ou Pix
+    </p>
+  </div>
+</section>
+
+<footer>
+  <p>© 2026 RotaMeds · @rotameds · Todos os direitos reservados</p>
+  <p style="margin-top:6px;">Este produto é vendido com intermediação da <strong style="color:rgba(255,255,255,0.4)">Hotmart</strong>. Ao comprar você concorda com os Termos de Uso.</p>
+</footer>
+
+<!-- FLOATING CTA -->
+<a href="https://pay.hotmart.com/Y105321768N" class="float-cta">
+  ⚡ R$14,90 — Garantir agora
+</a>
+
+<script>
+// ── COUNTDOWN TIMER (3h rolling) ──
+function getOrSetEnd() {
+  let end = localStorage.getItem('rm_end');
+  if (!end || Date.now() > parseInt(end)) {
+    end = Date.now() + 3 * 60 * 60 * 1000; // 3 horas
+    localStorage.setItem('rm_end', end);
+  }
+  return parseInt(end);
+}
+
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function tick() {
+  const end = getOrSetEnd();
+  const diff = Math.max(0, end - Date.now());
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+
+  document.getElementById('cd-h').textContent = pad(h);
+  document.getElementById('cd-m').textContent = pad(m);
+  document.getElementById('cd-s').textContent = pad(s);
+  document.getElementById('bar-timer').textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+
+  if (diff === 0) {
+    localStorage.removeItem('rm_end');
+  }
+}
+tick();
+setInterval(tick, 1000);
+
+// ── FAQ ──
+function toggleFaq(btn) {
+  const a = btn.nextElementSibling;
+  const isOpen = a.classList.contains('open');
+  document.querySelectorAll('.faq-a').forEach(el => el.classList.remove('open'));
+  document.querySelectorAll('.faq-q').forEach(el => el.classList.remove('open'));
+  if (!isOpen) { a.classList.add('open'); btn.classList.add('open'); }
+}
+</script>
+</body>
+</html>
